@@ -1,0 +1,11 @@
+replacements:
+  - pattern: user1
+    replacement: cjimti
+rules:
+  - name: Gitlab Merge Request
+    producer: Gitlab
+    contentRule:
+      key: object_kind
+      equals: merge_request
+    description: Gitlab merge request.
+    template: "{{ .object_attributes.assignee.username }}, \x0304MERGE REQUEST\x03 #{{ .object_attributes.id }} is \x0313{{ .object_attributes.state }}\x03 for \x0307{{ .project.name }}\x03 {{ .project.web_url }} cc {{ .user.username }}"
