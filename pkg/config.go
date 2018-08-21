@@ -4,6 +4,8 @@ import (
 	"regexp"
 	"text/template"
 
+	"strings"
+
 	"github.com/Masterminds/sprig"
 )
 
@@ -37,7 +39,13 @@ func (c *Configuration) Warmup() error {
 	c.ParsedTemplates = ParsedTemplates{}
 
 	for _, rule := range c.Rules {
-		ruleTemplate, err := template.New(rule.Producer).Funcs(sprig.TxtFuncMap()).Parse(rule.Template)
+		// cleanup template.
+
+		cleanTemplate := strings.Replace(rule.Template, "\n", " ", -1)
+		cleanTemplate = strings.Join(strings.Fields(cleanTemplate), " ")
+		cleanTemplate = strings.Replace(cleanTemplate, "\\\\", "\\", -1)
+
+		ruleTemplate, err := template.New(rule.Producer).Funcs(sprig.TxtFuncMap()).Parse(cleanTemplate)
 		if err != nil {
 			return err
 		}

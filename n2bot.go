@@ -83,10 +83,7 @@ func main() {
 	// fire up IRC client
 	go func() {
 
-		if debug == "true" {
-			ircConn.VerboseCallbackHandler = true
-			ircConn.Debug = true
-		}
+		ircConn.VerboseCallbackHandler = true
 
 		if ssl == "true" {
 			ircConn.UseTLS = true

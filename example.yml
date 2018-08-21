@@ -6,6 +6,35 @@ rules:
     producer: Gitlab
     contentRule:
       key: object_kind
-      equals: merge_request
+      equals: "merge_request"
     description: Gitlab merge request.
-    template: "{{ .object_attributes.assignee.username }}, \x0304MERGE REQUEST\x03 #{{ .object_attributes.id }} is \x0313{{ .object_attributes.state }}\x03 for \x0307{{ .project.name }}\x03 {{ .project.web_url }} cc {{ .user.username }}"
+    template: "
+      {{ .assignee.username }},
+      \x0304MERGE REQUEST\x03 #{{ .object_attributes.id }}
+      is \x0313{{ .object_attributes.state }}\x03
+      for \x0307{{ .project.name }}\x03 {{ .project.web_url }}/merge_requests
+      cc {{ .user.username }}, {{ .object_attributes.last_commit.author.name }}"
+  - name: Gitlab Push
+    producer: Gitlab
+    contentRule:
+      key: object_kind
+      equals: "push"
+    description: Gitlab push event.
+    template: "
+      {{ .user_username }},
+      \x0311PUSHED\x03 \x0308{{ .commits | len }}\x03 commits
+      to \x0313{{ .ref }}\x03
+      for \x0307{{ .repository.name }}\x03 {{ .repository.homepage }}/commits/{{ .ref | splitList \"/\" | last }}
+      cc {{ with last $.commits }}{{ .author.name }}{{ end }}"
+  - name: Gitlab Pipeline Event
+    producer: Gitlab
+    contentRule:
+      key: object_kind
+      equals: "pipeline"
+    description: Gitlab pipeline event.
+    template: "
+      {{ .user.username }},
+      \x0311PIPELINE\x03 #{{ .object_attributes.id }}
+      is \x0313{{ .object_attributes.status }}\x03
+      for \x0307{{ .project.name }}\x03 {{ .project.web_url }}
+      cc {{ .commit.author.name }}"
