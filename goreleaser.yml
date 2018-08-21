@@ -2,7 +2,7 @@
 build:
   # Path to main.go file.
   # Default is `main.go`
-  main: ./server.go
+  main: ./n2bot.go
   binary: n2bot
 
   env:
