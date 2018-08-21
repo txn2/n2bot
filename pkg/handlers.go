@@ -77,12 +77,12 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 	// get template for producer
 	tmpl, err := h.templateProducer(producer, msgIn)
 	if err != nil {
-		h.Logger.Warn(err.Error(),
+		h.Logger.Info(err.Error(),
 			zap.String("type", "templateNotFound"),
 			zap.String("producer", producer),
 		)
 
-		ack.SetPayload(gin.H{"status": "ok", "msg_out": ""})
+		ack.SetPayload(gin.H{"status": "ok", "state": "no template found", "msg_out": ""})
 		c.JSON(ack.ServerCode, ack)
 		return
 	}
@@ -105,8 +105,10 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 	c.JSON(ack.ServerCode, ack)
 
 	// post message to specified channels
-	for _, ch := range channels {
-		h.IRC.SendRaw(fmt.Sprintf("PRIVMSG %s : %s", strings.Replace(ch, "^", "#", -1), msgOut))
+	if msgOut != "" {
+		for _, ch := range channels {
+			h.IRC.SendRaw(fmt.Sprintf("PRIVMSG %s : %s", strings.Replace(ch, "^", "#", -1), msgOut))
+		}
 	}
 
 	return
@@ -116,13 +118,16 @@ func (h *Handler) templateProducer(producer string, msgIn MsgIn) (*template.Temp
 	// find a template for a producer and any content rules
 	for p, rt := range h.Cfg.ParsedTemplates {
 		if p == producer {
+			h.Logger.Debug("Checking producer: " + p)
 			for cr, t := range rt {
 				// found empty content rule, so we match and return
-				if cr.Key != "" && cr.Equals != "" {
+				if cr.Key == "" && cr.Equals == "" {
+					h.Logger.Debug("Empty content rule.")
 					return t, nil
 				}
 
 				if msgIn[cr.Key] == cr.Equals {
+					h.Logger.Debug("FOUND content rule.")
 					return t, nil
 				}
 			}

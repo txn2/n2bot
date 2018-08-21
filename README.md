@@ -25,7 +25,7 @@ rules:
 
 Run from source:
 ```bash
-DEBUG=true CONFIG=example.yml go run ./server.go
+DEBUG=true CONFIG=example.yml go run ./n2bot.go
 ```
 
 [Example Gitlab merge request] post:
