@@ -11,7 +11,7 @@ import (
 
 type ParsedTemplates map[string]map[ContentRule]*template.Template
 
-type CompiledRegexes map[string]*regexp.Regexp
+type CompiledRegexes map[*regexp.Regexp]string
 
 type ContentRule struct {
 	Key    string `yaml:"key"`
@@ -56,14 +56,15 @@ func (c *Configuration) Warmup() error {
 		c.ParsedTemplates[rule.Producer][rule.ContentRule] = ruleTemplate
 	}
 
-	c.CompiledRegexes = make(map[string]*regexp.Regexp)
+	c.CompiledRegexes = CompiledRegexes{}
 
 	for _, r := range c.Replacements {
+
 		rxp, err := regexp.Compile(r.Pattern)
 		if err != nil {
 			return err
 		}
-		c.CompiledRegexes[r.Replacement] = rxp
+		c.CompiledRegexes[rxp] = r.Replacement
 	}
 
 	return nil

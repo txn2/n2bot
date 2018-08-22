@@ -97,7 +97,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 	}
 
 	// regex replacements
-	for replace, rgx := range h.Cfg.CompiledRegexes {
+	for rgx, replace := range h.Cfg.CompiledRegexes {
 		msgOut = rgx.ReplaceAllString(msgOut, replace)
 	}
 

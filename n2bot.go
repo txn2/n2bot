@@ -54,7 +54,10 @@ func main() {
 	}
 
 	// parse templates and compile regexes
-	cfg.Warmup()
+	err := cfg.Warmup()
+	if err != nil {
+		panic(err)
+	}
 
 	gin.SetMode(gin.ReleaseMode)
 

@@ -1,6 +1,10 @@
 replacements:
   - pattern: user1
     replacement: cjimti
+  - pattern: root
+    replacement: cjimti
+  - pattern: Craig Johnston
+    replacement: cjimti
 rules:
   - name: Gitlab Merge Request
     producer: Gitlab
