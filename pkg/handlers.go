@@ -3,15 +3,13 @@ package pkg
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
 	"text/template"
 
-	"errors"
-
-	"fmt"
-
-	"strings"
-
 	"github.com/gin-gonic/gin"
+	"github.com/patrickmn/go-cache"
 	"github.com/thoj/go-ircevent"
 	"github.com/txn2/service/ginack"
 	"go.uber.org/zap"
@@ -24,6 +22,7 @@ type Handler struct {
 	Cfg    Configuration
 	IRC    *irc.Connection
 	Token  string
+	Cache  *cache.Cache
 }
 
 func (h *Handler) MessageHandler(c *gin.Context) {
@@ -106,9 +105,22 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 
 	// post message to specified channels
 	if msgOut != "" {
-		for _, ch := range channels {
-			h.IRC.SendRaw(fmt.Sprintf("PRIVMSG %s : %s", strings.Replace(ch, "^", "#", -1), msgOut))
+
+		// prevent duplicate message within time span
+		// this helps prevent conditions where similar posts produce the
+		// exact same message
+		_, found := h.Cache.Get(msgOut)
+		if !found {
+			for _, ch := range channels {
+				h.IRC.SendRaw(fmt.Sprintf("PRIVMSG %s : %s", strings.Replace(ch, "^", "#", -1), msgOut))
+			}
+			// add message to cache
+			h.Cache.Set(msgOut, "sent", cache.DefaultExpiration)
+
+			return
 		}
+
+		h.Logger.Info("CACHE HIT", zap.String("msgOut", msgOut))
 	}
 
 	return

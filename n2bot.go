@@ -15,6 +15,7 @@ import (
 
 	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
+	"github.com/patrickmn/go-cache"
 	"github.com/thoj/go-ircevent"
 	"github.com/txn2/n2bot/pkg"
 	"github.com/txn2/service/ginack"
@@ -81,6 +82,7 @@ func main() {
 		Cfg:    cfg,
 		IRC:    ircConn,
 		Token:  token,
+		Cache:  cache.New(1*time.Minute, 5*time.Minute),
 	}
 
 	// fire up IRC client
