@@ -6,6 +6,24 @@ replacements:
   - pattern: Craig Johnston
     replacement: cjimti
 rules:
+  - name: Jira Issue Update
+    producer: Jira
+    contentRule:
+      key: webhookEvent
+      equals: "jira:issue_updated"
+    description: Jira issue update.
+    template: "
+            {{ .issue.fields.assignee.name }},
+             \x02\x0300ISSUE\x03\x02 📝 \x0307{{ .issue.key }}\x03
+            updated
+            {{ range $key, $value := .changelog.items }}
+              {{ if eq $value.field \"status\" }}
+                from \x0307{{ $value.fromString }}\x03
+                to \x0304{{ $value.toString }}\x03
+              {{ end }}
+            {{ end }}
+            {{ $url := splitList \"/\" .issue.self }}{{ index $url 0 }}//{{ index $url 2 }}/browse/{{ .issue.key }}
+            cc {{ .issue.fields.reporter.name }}, {{ .user.name }}"
   - name: Gitlab Merge Request
     producer: Gitlab
     contentRule:
@@ -13,11 +31,11 @@ rules:
       equals: "merge_request"
     description: Gitlab merge request.
     template: "
-      {{ .assignee.username }},
-      \x0304MERGE REQUEST\x03 #{{ .object_attributes.id }}
-      is \x0313{{ .object_attributes.state }}\x03
-      for \x0307{{ .project.name }}\x03 {{ .project.web_url }}/merge_requests
-      cc {{ .user.username }}, {{ .object_attributes.last_commit.author.name }}"
+          {{ .assignee.username }},
+          \x0304MERGE REQUEST\x03 #{{ .object_attributes.id }}
+          is \x0313{{ .object_attributes.state }}\x03
+          for \x0307{{ .project.name }}\x03 {{ .project.web_url }}/merge_requests
+          cc {{ .user.username }}, {{ .object_attributes.last_commit.author.name }}"
   - name: Gitlab Push
     producer: Gitlab
     contentRule:
@@ -25,11 +43,11 @@ rules:
       equals: "push"
     description: Gitlab push event.
     template: "
-      {{ .user_username }},
-      \x0311PUSHED\x03 \x0308{{ .commits | len }}\x03 commits
-      to \x0313{{ .ref }}\x03
-      for \x0307{{ .repository.name }}\x03 {{ .repository.homepage }}/commits/{{ .ref | splitList \"/\" | last }}
-      cc {{ with last $.commits }}{{ .author.name }}{{ end }}"
+          {{ .user_username }},
+          \x0311PUSHED\x03 \x0308{{ .commits | len }}\x03 commits
+          to \x0313{{ .ref }}\x03
+          for \x0307{{ .repository.name }}\x03 {{ .repository.homepage }}/commits/{{ .ref | splitList \"/\" | last }}
+          cc {{ with last $.commits }}{{ .author.name }}{{ end }}"
   - name: Gitlab Pipeline Event
     producer: Gitlab
     contentRule:
@@ -37,8 +55,8 @@ rules:
       equals: "pipeline"
     description: Gitlab pipeline event.
     template: "
-      {{ .user.username }},
-      \x0311PIPELINE\x03 #{{ .object_attributes.id }}
-      is \x0313{{ .object_attributes.status }}\x03
-      for \x0307{{ .project.name }}\x03 {{ .project.web_url }}
-      cc {{ .commit.author.name }}"
+          {{ .user.username }},
+          \x0311PIPELINE\x03 #{{ .object_attributes.id }}
+          is \x0313{{ .object_attributes.status }}\x03
+          for \x0307{{ .project.name }}\x03 {{ .project.web_url }}/pipelines/{{ .object_attributes.id }}
+          cc {{ .commit.author.name }}"

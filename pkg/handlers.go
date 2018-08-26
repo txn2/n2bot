@@ -106,6 +106,9 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 	// post message to specified channels
 	if msgOut != "" {
 
+		// final cleanup
+		msgOut = strings.Join(strings.Fields(msgOut), " ")
+
 		// prevent duplicate message within time span
 		// this helps prevent conditions where similar posts produce the
 		// exact same message
