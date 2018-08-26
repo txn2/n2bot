@@ -15,10 +15,10 @@ rules:
     template: "
             {{ .issue.fields.assignee.name }},
              \x02\x0300ISSUE\x03\x02 📝 \x0307{{ .issue.key }}\x03
-            updated
+            {{ if .comment }}{{ .comment.author.name }}: \x0309\"{{ printf \"%.40s\" .comment.body }}\"\x03{{ end }}
             {{ range $key, $value := .changelog.items }}
               {{ if eq $value.field \"status\" }}
-                from \x0307{{ $value.fromString }}\x03
+                updated from \x0307{{ $value.fromString }}\x03
                 to \x0304{{ $value.toString }}\x03
               {{ end }}
             {{ end }}
