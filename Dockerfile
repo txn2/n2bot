@@ -1,29 +1,46 @@
-FROM golang:1.10.2-alpine3.7 AS builder
+ARG app=n2bot
+ARG project=github.com/txn2/n2bot
+ARG buildsrc=./cmd/n2bot.go
 
-RUN apk update \
- && apk add git
+FROM golang:1.15.2-alpine3.12 AS builder
 
-RUN mkdir -p /go/src \
+ARG app
+ARG project
+ARG buildsrc
+ARG version
+
+ENV PROJECT=${project} \
+    APP=${app} \
+    BUILDSRC=${buildsrc} \
+    CGO_ENABLED=0 \
+    GOOS=linux \
+    GOARCH=amd64
+
+RUN mkdir -p /go/src/ \
  && mkdir -p /go/bin \
  && mkdir -p /go/pkg
 
-ENV GOPATH=/go
-ENV PATH=$GOPATH/bin:$PATH
+ENV PATH=/go/bin:$PATH
 
-RUN mkdir -p $GOPATH/src/app
-ADD . $GOPATH/src/app
+RUN mkdir -p /go/src/$PROJECT/
+ADD . /go/src/$PROJECT/
 
-ADD . /go/src
+WORKDIR /go/src/$PROJECT/
 
-WORKDIR $GOPATH/src/app
+RUN go build -ldflags "-X main.Version=${version} -extldflags \"-static\"" -o /go/bin/app $BUILDSRC
 
-RUN go get .
-RUN go get github.com/json-iterator/go
-RUN CGO_ENABLED=0 go build -tags=jsoniter -a -installsuffix cgo -o /go/bin/server .
+RUN echo "nobody:x:65534:65534:Nobody:/:" > /etc_passwd
 
-FROM alpine:3.7
+FROM scratch
+ARG app
+
+ENV PATH=/bin
+
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
+COPY --from=builder /etc_passwd /etc/passwd
+COPY --from=builder /go/bin/app /bin/n2bot
 
 WORKDIR /
 
-COPY --from=builder /go/bin/server /server
-ENTRYPOINT ["/server"]
+USER nobody
+ENTRYPOINT ["/bin/n2bot"]

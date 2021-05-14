@@ -21,8 +21,19 @@ rules:
 ### Development
 
 Run from source:
-```bash
+```shell script
 DEBUG=true CONFIG=example.yml go run ./n2bot.go
+```
+
+Build container:
+```shell script
+docker build --build-arg version=1.1.0 -t txn2/n2bot:1.1.0 .
+docker push txn2/n2bot:1.1.0
+```
+
+Run container:
+```shell script
+docker run -p 8080:8080 -e IP=0.0.0.0 -v $(pwd)/example.yml:/example.yml txn2/n2bot:1.1.0
 ```
 
 - **n2bot** uses [go-ircevent] for IRC event handling

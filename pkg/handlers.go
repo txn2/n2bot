@@ -5,13 +5,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"strings"
 	"text/template"
 
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
-	"github.com/thoj/go-ircevent"
-	"github.com/txn2/service/ginack"
+	irc "github.com/thoj/go-ircevent"
 	"go.uber.org/zap"
 )
 
@@ -26,8 +26,6 @@ type Handler struct {
 }
 
 func (h *Handler) MessageHandler(c *gin.Context) {
-	ack := ginack.Ack(c)
-
 	producer := c.Param("producer")
 	channelStr := c.Param("channels")
 	token := c.Param("token")
@@ -35,10 +33,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 	channels := strings.Split(channelStr, ",")
 
 	if token != h.Token {
-		ack.ServerCode = 401
-		ack.SetPayload(gin.H{"status": "fail", "message": "bad token"})
-		ack.Success = false
-		c.JSON(ack.ServerCode, ack)
+		c.JSON(http.StatusUnauthorized, gin.H{"status": "fail", "message": "bad token"})
 		return
 	}
 
@@ -49,9 +44,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 
 	rs, err := c.GetRawData()
 	if err != nil {
-		ack.ServerCode = 500
-		ack.SetPayload(gin.H{"status": "fail", "error": err.Error()})
-		c.JSON(ack.ServerCode, ack)
+		c.JSON(http.StatusBadRequest, gin.H{"status": "fail", "error": err.Error()})
 		return
 	}
 
@@ -62,9 +55,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 
 	err = json.Unmarshal(rs, &msgIn)
 	if err != nil {
-		ack.ServerCode = 500
-		ack.SetPayload(gin.H{"status": "fail", "error": err.Error()})
-		c.JSON(ack.ServerCode, ack)
+		c.JSON(http.StatusBadRequest, gin.H{"status": "fail", "error": err.Error()})
 		return
 	}
 
@@ -81,8 +72,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 			zap.String("producer", producer),
 		)
 
-		ack.SetPayload(gin.H{"status": "ok", "state": "no template found", "msg_out": ""})
-		c.JSON(ack.ServerCode, ack)
+		c.JSON(http.StatusBadRequest, gin.H{"status": "ok", "state": "no template found", "msg_out": ""})
 		return
 	}
 
@@ -100,8 +90,7 @@ func (h *Handler) MessageHandler(c *gin.Context) {
 		msgOut = rgx.ReplaceAllString(msgOut, replace)
 	}
 
-	ack.SetPayload(gin.H{"status": "ok", "msg_out": msgOut})
-	c.JSON(ack.ServerCode, ack)
+	c.JSON(http.StatusOK, gin.H{"status": "ok", "msg_out": msgOut})
 
 	// post message to specified channels
 	if msgOut != "" {
