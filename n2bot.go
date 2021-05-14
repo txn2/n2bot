@@ -1,22 +1,16 @@
-// n2irc receives posted JSON and renders associated
-// templates to an IRC channel
-//
-// txn2.com
 package main
 
 import (
+	"crypto/tls"
 	"io/ioutil"
 	"os"
+	"strings"
 	"time"
 
-	"crypto/tls"
-
-	"strings"
-
-	"github.com/gin-contrib/zap"
+	ginzap "github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
 	"github.com/patrickmn/go-cache"
-	"github.com/thoj/go-ircevent"
+	irc "github.com/thoj/go-ircevent"
 	"github.com/txn2/n2bot/pkg"
 	"github.com/txn2/service/ginack"
 	"go.uber.org/zap"

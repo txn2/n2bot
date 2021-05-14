@@ -1,9 +1,6 @@
 # n2bot
 
-**n2bot** receives POSTed JSON data from third party applications using webhooks (also called a web callback or HTTP push API) in order to communicate stataus to and IRC channel.
-
-**n2bot** is configured through a set of rules associated the type of posted JSON to a corresponding template used to form the channel message.
-
+**n2bot** receives POSTed JSON messages, transforms them through templates, and relays them to an IRC channel based on configuration rules.
 
 Example Configuration:
 ```yaml
@@ -28,7 +25,7 @@ Run from source:
 DEBUG=true CONFIG=example.yml go run ./n2bot.go
 ```
 
-- [go-ircevent] is used for IRC event handling
+- **n2bot** uses [go-ircevent] for IRC event handling
 
 [go-ircevent]:https://github.com/thoj/go-ircevent
 [Example Gitlab merge request]:https://docs.gitlab.com/ce/user/project/integrations/webhooks.html#merge-request-events
